@@ -23,7 +23,7 @@ RUN apt-get update -y && apt-get install --no-install-recommends -y \\
     xfce4 xfce4-goodies tigervnc-standalone-server novnc websockify \\
     sudo xterm init systemd snapd vim net-tools curl wget git tzdata \\
     dbus-x11 x11-utils x11-xserver-utils x11-apps software-properties-common \\
-    htop neofetch ca-certificates openssl \\
+    htop neofetch ca-certificates openssl gnupg dirmngr \\
     && rm -rf /var/lib/apt/lists/*
 
 # Add Mozilla Team PPA for direct Firefox installation without snap
