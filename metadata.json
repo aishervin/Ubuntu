@@ -1,0 +1,6 @@
+{
+  "name": "SHΞN™ — Ubuntu Free Server",
+  "description": "پروژه سرور اوبونتوی رایگان لینوکس با دسکتاپ گرافیکی noVNC و دسترسی ترمینال آنلاین توسط SHΞN™",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

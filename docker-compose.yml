@@ -1,0 +1,21 @@
+version: '3.8'
+
+# ==============================================================================
+# SHΞN™ — Ubuntu Free Server Docker Compose
+# Channel & Contact: https://t.me/shervini
+# ==============================================================================
+
+services:
+  shen-ubuntu:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: shen-ubuntu:latest
+    container_name: shen-ubuntu-server
+    restart: always
+    ports:
+      - "6080:6080" # Web noVNC Desktop Access (Browser)
+      - "5901:5901" # Native VNC Client Access (RealVNC/TigerVNC)
+    environment:
+      - VNC_RESOLUTION=1280x800
+    shm_size: '1gb'
