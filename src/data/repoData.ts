@@ -5,10 +5,10 @@ export const REPO_FILES: RepoFile[] = [
     name: 'Dockerfile',
     path: '/Dockerfile',
     language: 'dockerfile',
-    size: '1.4 KB',
-    description: 'کانفیگ اصلی ساخت ایمیج داکر اوبونتو با دسکتاپ XFCE4 و وب VNC',
+    size: '1.5 KB',
+    description: 'کانفیگ ساخت ایمیج داکر با دسکتاپ XFCE4، فایرفاکس رسمی و وب VNC بهینه شده برای Railway',
     content: `# ==============================================================================
-# SHΞN™ — Ubuntu Free Server (Desktop GUI + SSH Terminal)
+# SHΞN™ — Ubuntu Free Server (Desktop GUI + Web noVNC)
 # Developed and Customized by SHΞN™ | Telegram: https://t.me/shervini
 # ==============================================================================
 
@@ -18,42 +18,101 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV USER=root
 ENV DISPLAY=:1
 
-# Install core packages, XFCE desktop, TigerVNC, noVNC, and utilities
+# Install core packages, XFCE desktop, TigerVNC, noVNC, and essential tools
 RUN apt-get update -y && apt-get install --no-install-recommends -y \\
     xfce4 xfce4-goodies tigervnc-standalone-server novnc websockify \\
-    sudo xterm init systemd snapd vim net-tools curl wget git tzdata \\
-    dbus-x11 x11-utils x11-xserver-utils x11-apps software-properties-common \\
-    htop neofetch ca-certificates openssl gnupg gpg-agent dirmngr \\
+    sudo xterm vim net-tools curl wget git tzdata \\
+    dbus-x11 x11-utils x11-xserver-utils x11-apps \\
+    htop neofetch ca-certificates openssl \\
     && rm -rf /var/lib/apt/lists/*
 
-# Add Mozilla Team PPA for direct Firefox installation without snap
-RUN add-apt-repository ppa:mozillateam/ppa -y && \\
-    echo 'Package: *' >> /etc/apt/preferences.d/mozilla-firefox && \\
-    echo 'Pin: release o=LP-PPA-mozillateam' >> /etc/apt/preferences.d/mozilla-firefox && \\
-    echo 'Pin-Priority: 1001' >> /etc/apt/preferences.d/mozilla-firefox && \\
-    echo 'Unattended-Upgrade::Allowed-Origins:: "LP-PPA-mozillateam:jammy";' | tee /etc/apt/apt.conf.d/51unattended-upgrades-firefox && \\
+# Add official Mozilla APT repository for direct Firefox installation without snap
+# (Avoids add-apt-repository, keyserver blocks, and gpg-agent issues on Railway)
+RUN install -d -m 0755 /etc/apt/keyrings && \\
+    wget -q https://packages.mozilla.org/apt/repo-signing-key.gpg -O- | tee /etc/apt/keyrings/packages.mozilla.org.asc > /dev/null && \\
+    echo "deb [signed-by=/etc/apt/keyrings/packages.mozilla.org.asc] https://packages.mozilla.org/apt mozilla main" | tee /etc/apt/sources.list.d/mozilla.list && \\
+    echo 'Package: *\\nPin: origin packages.mozilla.org\\nPin-Priority: 1000' | tee /etc/apt/preferences.d/mozilla && \\
     apt-get update -y && \\
-    apt-get install -y firefox xubuntu-icon-theme && \\
+    apt-get install -y --no-install-recommends firefox xubuntu-icon-theme && \\
     rm -rf /var/lib/apt/lists/*
 
-# Setup Xauthority
-RUN touch /root/.Xauthority
+# Setup Xauthority & noVNC index symlink
+RUN touch /root/.Xauthority && \\
+    ln -sf /usr/share/novnc/vnc.html /usr/share/novnc/index.html
 
-# Configure VNC startup configuration
-RUN mkdir -p /root/.vnc && \\
-    echo '#!/bin/bash\\nxrdb $HOME/.Xresources\\nstartxfce4 &' > /root/.vnc/xstartup && \\
-    chmod +x /root/.vnc/xstartup
+# Copy container entrypoint script
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 # Expose VNC Port (5901) and noVNC Web GUI Port (6080)
 EXPOSE 5901
 EXPOSE 6080
 
-# Launch VNC server and websockify SSL bridge
-CMD bash -c "vncserver -localhost no -SecurityTypes None -geometry 1280x800 --I-KNOW-THIS-IS-INSECURE && \\
-    openssl req -new -subj '/C=US/ST=SHEN/L=Cloud/O=SHEN-UBUNTU/CN=shervini' -x509 -days 365 -nodes -out self.pem -keyout self.pem && \\
-    websockify -D --web=/usr/share/novnc/ --cert=self.pem 6080 localhost:5901 && \\
-    echo '>>> SHΞN™ Ubuntu Free Server is running!' && \\
-    tail -f /dev/null"`
+ENTRYPOINT ["/entrypoint.sh"]`
+  },
+  {
+    name: 'entrypoint.sh',
+    path: '/entrypoint.sh',
+    language: 'bash',
+    size: '1.4 KB',
+    description: 'اسکریپت ورودی کانتینر برای مدیریت DBus، پاکسازی قفل‌ها و پشتیبانی از پورت داینامیک Railway',
+    content: `#!/usr/bin/env bash
+# ==============================================================================
+# SHΞN™ Ubuntu Free Server — Container Entrypoint Script
+# Developer: SHΞN™ | Telegram: https://t.me/shervini
+# ==============================================================================
+set -e
+
+echo "=================================================="
+echo "    🐧 SHΞN™ — Ubuntu Free Server (Cloud Edition)"
+echo "    Telegram: https://t.me/shervini              "
+echo "=================================================="
+
+# Ensure dbus runtime directory and UUID exist for XFCE session stability
+mkdir -p /var/run/dbus
+dbus-uuidgen --ensure 2>/dev/null || true
+
+# Clean up stale locks if container was previously stopped or restarted
+rm -rf /tmp/.X1-lock /tmp/.X11-unix /tmp/.X*-lock /tmp/.vnc/*.pid /tmp/.vnc/*.log 2>/dev/null || true
+
+# Setup Xauthority & VNC directory
+mkdir -p /root/.vnc
+touch /root/.Xauthority
+
+# Configure standard XFCE xstartup if not present
+if [ ! -f /root/.vnc/xstartup ]; then
+cat << 'EOF' > /root/.vnc/xstartup
+#!/bin/bash
+unset SESSION_MANAGER
+unset DBUS_SESSION_BUS_ADDRESS
+export XKL_XMODMAP_DISABLE=1
+[ -x /etc/vnc/xstartup ] && exec /etc/vnc/xstartup
+[ -r $HOME/.Xresources ] && xrdb $HOME/.Xresources
+xsetroot -solid grey
+vncconfig -iconic &
+startxfce4 &
+EOF
+chmod +x /root/.vnc/xstartup
+fi
+
+# Ensure index.html in noVNC links to vnc.html so root URL / loads GUI directly
+if [ -d /usr/share/novnc ] && [ ! -f /usr/share/novnc/index.html ]; then
+    ln -sf /usr/share/novnc/vnc.html /usr/share/novnc/index.html 2>/dev/null || true
+fi
+
+# Start TigerVNC Server on display :1 (port 5901)
+export USER=root
+export DISPLAY=:1
+echo ">>> [1/2] Starting TigerVNC server on display :1 (port 5901)..."
+vncserver :1 -localhost no -SecurityTypes None -geometry 1280x800 --I-KNOW-THIS-IS-INSECURE
+
+# Support Railway dynamic $PORT (defaults to 6080 for standard Docker/Compose)
+WEB_PORT="\${PORT:-6080}"
+echo ">>> [2/2] Starting noVNC Websockify on port \${WEB_PORT}..."
+echo ">>> Web GUI will be accessible at http://0.0.0.0:\${WEB_PORT}/"
+
+# Launch websockify in foreground (PID 1) so signals are handled and container stays alive
+exec websockify --web=/usr/share/novnc/ "\${WEB_PORT}" localhost:5901`
   },
   {
     name: 'README.md',
@@ -189,7 +248,7 @@ docker run -d \\
 
 echo ""
 echo "✅ Server started successfully!"
-echo "👉 Web Browser GUI (noVNC): http://localhost:$VNC_PORT/vnc.html"
+echo "👉 Web Browser GUI (noVNC): http://localhost:$VNC_PORT/"
 echo "👉 Native VNC Client: localhost:$NATIVE_PORT"
 echo "👉 Connect Telegram: https://t.me/shervini"
 echo "=================================================="`

@@ -36,7 +36,7 @@ docker run -d \
 
 echo ""
 echo "✅ Server started successfully!"
-echo "👉 Web Browser GUI (noVNC): http://localhost:$VNC_PORT/vnc.html"
+echo "👉 Web Browser GUI (noVNC): http://localhost:$VNC_PORT/"
 echo "👉 Native VNC Client: localhost:$NATIVE_PORT"
 echo "👉 Connect Telegram: https://t.me/shervini"
 echo "=================================================="

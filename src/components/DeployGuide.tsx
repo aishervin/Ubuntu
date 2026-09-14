@@ -181,11 +181,11 @@ export const DeployGuide: React.FC = () => {
               </p>
               <p className="flex items-center gap-2">
                 <ArrowRight className="w-4 h-4 text-purple-400 shrink-0" />
-                روی دکمه <strong>Generate Domain</strong> کلیک کنید و پورت پیش‌فرض را روی <code className="text-amber-300 font-mono">6080</code> قرار دهید.
+                روی دکمه <strong>Generate Domain</strong> کلیک کنید (Railway به طور خودکار ترافیک را به کانتینر شما هدایت می‌کند).
               </p>
               <p className="flex items-center gap-2">
                 <ArrowRight className="w-4 h-4 text-purple-400 shrink-0" />
-                همچنین می‌توانید <strong>TCP Proxy</strong> را فعال کنید تا پورت 6080 به یک پورت مستقیم TCP نگاشت شود.
+                در صورت نیاز، می‌توانید در بخش <strong>Networking</strong> مقدار <strong>Port</strong> را روی <code className="text-amber-300 font-mono">6080</code> قرار دهید.
               </p>
             </div>
           </div>
@@ -196,10 +196,10 @@ export const DeployGuide: React.FC = () => {
               مرحله چهارم: اتصال به دسکتاپ گرافیکی
             </h3>
             <p className="text-slate-300 text-sm leading-relaxed mb-3">
-              دامنه‌ای که Railway به شما اختصاص داده است را در تب جدید باز کنید (به عنوان مثال <code className="text-cyan-300 bg-slate-950 px-1.5 py-0.5 rounded dir-ltr">https://your-app.up.railway.app/vnc.html</code>).
+              دامنه‌ای که Railway به شما اختصاص داده است را در مرورگر باز کنید (مثلاً <code className="text-cyan-300 bg-slate-950 px-1.5 py-0.5 rounded dir-ltr">https://your-app.up.railway.app/</code>). محیط دسکتاپ noVNC مستقیماً بارگذاری می‌شود.
             </p>
             <p className="text-emerald-400 text-sm font-medium">
-              تبریک! اکنون دسکتاپ اوبونتو ۲۲.۰۴ با فایرفاکس و منوی XFCE آماده استفاده است.
+              تبریک! اکنون دسکتاپ اوبونتو ۲۲.۰۴ با فایرفاکس رسمی موزیلا، تم XFCE و ترمینال آنلاین آماده استفاده است.
             </p>
           </div>
         </div>
